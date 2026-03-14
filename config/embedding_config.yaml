@@ -118,4 +118,6 @@ skip_values:
 - iics_activity_logs.end_time_utc
 - new_table3.DateOfBirth
 - iics_cdi_metering_audit_data.obm_task_time_seconds
+skip_tables: [iics.iics_ipu_meter_usage]
+include_tables: []
 

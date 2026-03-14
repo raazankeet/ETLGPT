@@ -82,6 +82,7 @@ EMBED_CONFIG: Dict[str, Any] = {
     "embed_values": {},
     "skip_values": [],
     "skip_tables": [],
+    "include_tables": [],
 }
 
 def load_embedding_config(path: str = EMBED_CONFIG_PATH) -> Dict[str, Any]:
@@ -95,14 +96,15 @@ def load_embedding_config(path: str = EMBED_CONFIG_PATH) -> Dict[str, Any]:
             data.setdefault("embed_values", {})
             data.setdefault("skip_values", [])
             data.setdefault("skip_tables", [])
+            data.setdefault("include_tables", [])
             logger.info(f"Loaded embedding config from {path}")
             return data
     except FileNotFoundError:
         logger.warning(f"Embedding config file not found: {path}, using defaults")
-        return {"descriptions": {}, "column_descriptions": {}, "embed_values": {}, "skip_values": [], "skip_tables": []}
+        return {"descriptions": {}, "column_descriptions": {}, "embed_values": {}, "skip_values": [], "skip_tables": [], "include_tables": []}
     except Exception as e:
         logger.error(f"Failed to load embedding config: {e}")
-        return {"descriptions": {}, "column_descriptions": {}, "embed_values": {}, "skip_values": [], "skip_tables": []}
+        return {"descriptions": {}, "column_descriptions": {}, "embed_values": {}, "skip_values": [], "skip_tables": [], "include_tables": []}
 
 EMBED_CONFIG = load_embedding_config()
 
@@ -224,9 +226,29 @@ def fetch_schema() -> Dict[str, Any]:
     return schema
 
 
+def _table_allowed(sch: str, tbl: str, include_tables: set, skip_tables: set) -> bool:
+    """Return True if table should be embedded based on include/skip lists."""
+    if tbl in skip_tables or f"{sch}.{tbl}" in skip_tables:
+        return False
+    if include_tables and not (tbl in include_tables or f"{sch}.{tbl}" in include_tables):
+        return False
+    return True
+
+
+def _parse_table_ref(ref: str) -> Tuple[str, str]:
+    """Parse 'schema.table(col)' into (schema, table)."""
+    try:
+        sch, rest = ref.split(".", 1)
+        tbl = rest.split("(", 1)[0]
+        return sch, tbl
+    except Exception:
+        return "", ""
+
+
 def upsert_schema_into_chroma(schema: Dict[str, Any]) -> None:
     """Persist schema metadata into Chroma honoring config (descriptions, skip tables)."""
     skip_tables = set(EMBED_CONFIG.get("skip_tables", []) or [])
+    include_tables = set(EMBED_CONFIG.get("include_tables", []) or [])
     descriptions = EMBED_CONFIG.get("descriptions", {}) or {}
     column_descriptions = EMBED_CONFIG.get("column_descriptions", {}) or {}
 
@@ -235,7 +257,7 @@ def upsert_schema_into_chroma(schema: Dict[str, Any]) -> None:
     table_ids = []
     table_embs = []
     for sch, tbl in schema["tables"]:
-        if tbl in skip_tables or f"{sch}.{tbl}" in skip_tables:
+        if not _table_allowed(sch, tbl, include_tables, skip_tables):
             continue
         desc = descriptions.get(tbl) or descriptions.get(f"{sch}.{tbl}")
         doc = f"Table: {sch}.{tbl}" + (f" - {desc}" if desc else "")
@@ -248,7 +270,7 @@ def upsert_schema_into_chroma(schema: Dict[str, Any]) -> None:
     col_ids = []
     col_embs = []
     for sch, tbl, col, dtype in schema["columns"]:
-        if tbl in skip_tables or f"{sch}.{tbl}" in skip_tables:
+        if not _table_allowed(sch, tbl, include_tables, skip_tables):
             continue
         desc = column_descriptions.get(f"{sch}.{tbl}.{col}") or column_descriptions.get(f"{tbl}.{col}")
         doc = f"Column: {sch}.{tbl}.{col} :: {dtype}" + (f" - {desc}" if desc else "")
@@ -256,8 +278,16 @@ def upsert_schema_into_chroma(schema: Dict[str, Any]) -> None:
         col_ids.append(f"c::{sch}.{tbl}.{col}")
         col_embs.append(model.encode(doc).tolist())
 
-    # Relationships
-    rel_docs = [f"FK: {r['fk']} -> {r['pk']}" for r in schema["relationships"]]
+    # Relationships (only for allowed tables)
+    filtered_rels = []
+    for r in schema["relationships"]:
+        fk_sch, fk_tbl = _parse_table_ref(r["fk"])
+        pk_sch, pk_tbl = _parse_table_ref(r["pk"])
+        if not fk_sch or not pk_sch:
+            continue
+        if _table_allowed(fk_sch, fk_tbl, include_tables, skip_tables) and _table_allowed(pk_sch, pk_tbl, include_tables, skip_tables):
+            filtered_rels.append(r)
+    rel_docs = [f"FK: {r['fk']} -> {r['pk']}" for r in filtered_rels]
     rel_ids = [f"r::{idx}" for idx, _ in enumerate(rel_docs)]
     rel_embs = [model.encode(doc).tolist() for doc in rel_docs]
 
@@ -274,6 +304,7 @@ def sample_distinct_values(schema: Dict[str, Any], max_per_column: int = 50) -> 
     """For text-like columns, store up to N distinct sampled values in Chroma to reduce live hits, guided by config."""
     text_like = {"char", "nchar", "varchar", "nvarchar", "text", "ntext", "uniqueidentifier"}
     skip_tables = set(EMBED_CONFIG.get("skip_tables", []) or [])
+    include_tables = set(EMBED_CONFIG.get("include_tables", []) or [])
     embed_values = EMBED_CONFIG.get("embed_values", {}) or {}
     skip_values = set((EMBED_CONFIG.get("skip_values", []) or []))
 
@@ -286,7 +317,7 @@ def sample_distinct_values(schema: Dict[str, Any], max_per_column: int = 50) -> 
         for sch, tbl, col, dtype in schema["columns"]:
             if sch != MYSQL_DATABASE:
                 continue
-            if tbl in skip_tables or f"{sch}.{tbl}" in skip_tables:
+            if not _table_allowed(sch, tbl, include_tables, skip_tables):
                 continue
             if (dtype or "").lower() not in text_like:
                 continue
@@ -417,6 +448,10 @@ def get_live_distinct_values(col_path: str, max_values: int = 100) -> List[str]:
     sch, tbl, col = parts
     if sch != MYSQL_DATABASE:
         raise ValueError(f"Column path must use configured database schema: expected {MYSQL_DATABASE}, got {sch}")
+    include_tables = set(EMBED_CONFIG.get("include_tables", []) or [])
+    skip_tables = set(EMBED_CONFIG.get("skip_tables", []) or [])
+    if not _table_allowed(sch, tbl, include_tables, skip_tables):
+        raise ValueError(f"Table {sch}.{tbl} is not allowed by include/skip configuration")
     
     # Validate identifiers to prevent SQL injection
     if not all(_validate_sql_identifier(p) for p in [sch, tbl, col]):
