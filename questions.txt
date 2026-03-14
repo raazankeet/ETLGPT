@@ -1,0 +1,10 @@
+How many products does each customer hold, and who are the high value customers.
+Which branches are driving the most business in terms of customers and balances?
+Which channels are most used, and how much money flows through each?
+Are customers moving to digital channels over time?
+How is transaction volume and value changing month over month?
+
+Are we meeting SLAs for customer complaints?
+
+Are we gaining or losing active customers month over month?
+Are we opening more accounts than we are closing each month?

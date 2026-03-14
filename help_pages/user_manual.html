@@ -1,0 +1,965 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>User Manual - Intent-to-SQL Query Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --dark-bg: #0f172a;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-hover);
+            backdrop-filter: blur(10px);
+        }
+
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, #fdfeff 0%, #f8f9fd 100%);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .card h3 {
+            font-size: 1.15rem;
+            color: var(--dark-bg);
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+
+        .card p, .card ul {
+            color: var(--text-secondary);
+            line-height: 1.3;
+            font-size: 0.95rem;
+        }
+
+        .card ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .card ul li {
+            padding: 0.25rem 0;
+            padding-left: 1.3rem;
+            position: relative;
+            list-style: none !important;
+        }
+
+        .card ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin: 2.5rem 0 1.25rem;
+        }
+
+        .container > .section-header:first-child {
+            margin-top: 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.65rem;
+            color: var(--dark-bg);
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+
+        .section-header p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        /* Example Cards */
+        .example-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .example-card h3 {
+            color: white !important;
+        }
+
+        .example-card p {
+            color: white !important;
+        }
+
+        .example-card ul {
+            color: white !important;
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .example-card ul li {
+            color: white !important;
+            list-style: none !important;
+            padding-left: 1.5rem !important;
+        }
+
+        .example-card ul li::before {
+            left: 0.2rem !important;
+        }
+
+        .example-card code {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .example-card ul li::before {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        /* Accordion Styles */
+        .accordion-card {
+            cursor: pointer !important;
+            background: linear-gradient(135deg, #fdfeff 0%, #f8f9fd 100%);
+            user-select: none;
+            margin-bottom: 0.35rem;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .accordion-card:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .accordion-card .accordion-header {
+            font-weight: 700;
+            color: var(--dark-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer !important;
+            font-size: 1.05rem;
+        }
+
+        .accordion-card .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            overflow: hidden;
+            transition: grid-template-rows 0.4s ease-out, padding-top 0.4s ease-out;
+            padding-top: 0;
+        }
+
+        .accordion-card .accordion-content > * {
+            min-height: 0;
+        }
+
+        .accordion-card.active .accordion-content {
+            grid-template-rows: 1fr;
+            padding-top: 1rem;
+            transition: grid-template-rows 0.4s ease-in, padding-top 0.4s ease-in;
+        }
+
+        .accordion-card .accordion-content {
+            color: var(--text-secondary);
+        }
+
+        .accordion-card .accordion-content ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            margin-top: 0.5rem;
+        }
+
+        .accordion-card .accordion-content ul li {
+            padding: 0.25rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            list-style: none !important;
+        }
+
+        .accordion-card .accordion-content ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .accordion-card .accordion-content p {
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .accordion-card .toggle {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+            font-weight: normal;
+            color: var(--primary-color);
+        }
+
+        .accordion-card.active .toggle {
+            transform: rotate(45deg);
+            color: var(--accent-color);
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.2rem;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Feature List */
+        .feature-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .feature-item {
+            flex: 1 1 180px;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        /* Tips Box */
+        .tips-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            border-left: 3px solid #e17055;
+        }
+
+        .tips-box h3 {
+            color: #2d3436;
+            margin-bottom: 0.6rem;
+            font-size: 1.05rem;
+        }
+
+        .tips-box ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .tips-box li {
+            padding: 0.3rem 0;
+            padding-left: 1.8rem;
+            position: relative;
+            color: #2d3436;
+            font-size: 0.875rem;
+            list-style: none !important;
+        }
+
+        .tips-box li::before {
+            content: '💡';
+            position: absolute;
+            left: 0;
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.25rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .section-header {
+                margin: 2rem 0 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
+        .card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- What is this tool -->
+        <div class="section-header">
+            <h2>🎯 What is this tool?</h2>
+            <p>Query your database using natural language - no SQL knowledge required!</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 3rem;">
+            <p style="font-size: 1.1rem; line-height: 1.8;">
+                This chatbot helps you query your banking database using <strong>natural language</strong> instead of writing SQL code. 
+                Simply type your question in plain English, and the system will automatically generate and execute the appropriate SQL query for you.
+            </p>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="section-header">
+            <h2>🚀 Getting Started</h2>
+            <p>Start querying in 3 simple steps</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">1️⃣</div>
+                <h3>Ask Your Question</h3>
+                <ul>
+                    <li>Navigate to the "Ask" tab</li>
+                    <li>Type your question in plain English</li>
+                    <li>Click "Run Query" button</li>
+                    <li>Wait for results (you'll see "Working...")</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">2️⃣</div>
+                <h3>View Your Results</h3>
+                <ul>
+                    <li>Chatbot responds with your answer</li>
+                    <li>Navigate to "Results" tab for detailed data</li>
+                    <li>Results displayed in easy-to-read tables</li>
+                    <li>Large datasets automatically formatted</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">3️⃣</div>
+                <h3>Explore More</h3>
+                <ul>
+                    <li>Check "Inspect" tab to see how it works</li>
+                    <li>View generated SQL queries</li>
+                    <li>Browse your query history</li>
+                    <li>Adjust settings for your preferences</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- How to Ask Questions -->
+        <div class="section-header">
+            <h2>💬 How to Ask Questions</h2>
+            <p>Tips for getting the best results</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card example-card">
+                <div class="card-icon">✅</div>
+                <h3>Good Question Examples</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0; padding-left: 0;">"Show me the top 10 customers by total balance"</li>
+                    <li style="margin: 0.5rem 0; padding-left: 0;">"List all transactions over $1000 in the last month"</li>
+                    <li style="margin: 0.5rem 0; padding-left: 0;">"Find accounts opened in 2024"</li>
+                    <li style="margin: 0.5rem 0; padding-left: 0;">"Which branches have the most customers?"</li>
+                    <li style="margin: 0.5rem 0; padding-left: 0;">"Show active loans with balance > $50000"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tips-box">
+            <h3>💡 Tips for Better Results</h3>
+            <ul>
+                <li><strong>Be Specific:</strong> Include details like time ranges, amounts, or conditions</li>
+                <li><strong>Use Clear Language:</strong> Avoid ambiguous terms</li>
+                <li><strong>Specify Quantities:</strong> Mention how many results you want (e.g., "top 10")</li>
+                <li><strong>Include Filters:</strong> Add conditions to narrow results</li>
+            </ul>
+        </div>
+
+        <!-- Understanding the Interface -->
+        <div class="section-header">
+            <h2>📊 Understanding the Interface</h2>
+            <p>Explore the five main tabs</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">💬</div>
+                <h3>Ask Tab</h3>
+                <p>Main chat interface for asking questions</p>
+                <div class="feature-list">
+                    <span class="badge badge-info">Conversation history</span>
+                    <span class="badge badge-info">Example questions</span>
+                    <span class="badge badge-info">Real-time responses</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h3>Results Tab</h3>
+                <p>View your query results in table format</p>
+                <div class="feature-list">
+                    <span class="badge badge-success">Formatted tables</span>
+                    <span class="badge badge-success">Answer text</span>
+                    <span class="badge badge-success">Easy to read</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Inspect Tab</h3>
+                <p>Debug and understand the AI's reasoning</p>
+                <ul>
+                    <li><strong>Agent Trace:</strong> See processing steps</li>
+                    <li><strong>Generated SQL:</strong> View exact queries</li>
+                    <li><strong>Query History:</strong> All past queries</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🗂️</div>
+                <h3>Schema Browser</h3>
+                <p>Explore your database structure</p>
+                <ul>
+                    <li>Search for tables</li>
+                    <li>Find specific columns</li>
+                    <li>Understand available data</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⚙️</div>
+                <h3>Settings Tab</h3>
+                <p>Customize your experience</p>
+                <ul>
+                    <li>Adjust result limits</li>
+                    <li>Set query timeouts</li>
+                    <li>Test database connection</li>
+                    <li>Manage embeddings</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Safety Features -->
+        <div class="section-header">
+            <h2>🛡️ Safety Features</h2>
+            <p>Built-in safeguards to protect your data</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🔒</div>
+                <h3>Read-Only</h3>
+                <p>Only SELECT queries are generated - no data modification possible</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📏</div>
+                <h3>Row Limits</h3>
+                <p>Results limited to prevent overwhelming output (default: top 5-10 rows)</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⏱️</div>
+                <h3>Timeouts</h3>
+                <p>Queries automatically stop if they take too long</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">✓</div>
+                <h3>Validation</h3>
+                <p>All SQL is checked for syntax errors before execution</p>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="section-header">
+            <h2>❓ Common Questions</h2>
+            <p>Click on any question to see the answer</p>
+        </div>
+
+        <div style="display: grid; gap: 1rem; margin-bottom: 3rem;">
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>How do I limit the number of results?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Just specify in your question: "Show me the <strong>top 10</strong> transactions" or "Give me the <strong>first 20</strong> customers"
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Can I modify or delete data?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        No, this tool is <strong>read-only</strong> for safety. It only retrieves data, never modifies it.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>What if my query is taking too long?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Queries have automatic timeouts (default: 30 seconds). You can adjust this in Settings if needed.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>How do I know what tables/columns are available?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Use the <strong>Schema Browser</strong> tab to search for tables and columns in your database.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Can I see the actual SQL that was generated?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Yes! Go to the <strong>Inspect</strong> tab and check the <strong>Generated SQL</strong> section.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>What are embeddings and why do they matter?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Embeddings are a smart way the system learns about your database structure. On first startup, the system creates embeddings (takes 30-60 seconds), but subsequent startups are much faster (2-5 seconds) because it reuses them.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>When should I refresh embeddings?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        Refresh embeddings when:
+                        <ul style="margin-top: 0.5rem;">
+                            <li>You've added new tables or columns</li>
+                            <li>Column values have changed significantly</li>
+                            <li>The system isn't finding the right tables</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>What is the Agent Recursion Limit?</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        It controls how many reasoning steps the AI agent can take. Higher limits allow more complex reasoning but take longer:
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>25</strong> (Default): Good for most queries</li>
+                            <li><strong>50</strong>: For complex multi-table queries</li>
+                            <li><strong>75</strong>: For very complex analytical questions</li>
+                            <li><strong>100</strong>: Maximum - use only for extremely difficult questions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Managing Embeddings -->
+        <div class="section-header">
+            <h2>📊 Managing Embeddings (Advanced)</h2>
+            <p>Understand and control how the system learns your database</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="color: white !important; margin-bottom: 0.75rem;">What Gets Embedded?</h3>
+            <div class="card-grid" style="gap: 0.75rem;">
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">1. Table Names</strong><br>
+                    Names and descriptions of all tables
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">2. Column Names</strong><br>
+                    Column names and data types
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">3. Relationships</strong><br>
+                    Foreign key connections
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">4. Distinct Values</strong><br>
+                    Sample values from text columns
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenarios -->
+        <div class="section-header">
+            <h2>🎯 Refresh Scenarios</h2>
+            <p>When and how to refresh embeddings</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h3>Scenario 1: Added New Tables</h3>
+                <p><strong>What to refresh:</strong> Tables + Columns</p>
+                <ul>
+                    <li>Go to Settings → Embedding Management</li>
+                    <li>Check: ☑️ Table Names, ☑️ Column Names</li>
+                    <li>Uncheck: ☐ Relationships, ☐ Distinct Values</li>
+                    <li>Click "Refresh Selected Types"</li>
+                </ul>
+                <span class="badge badge-success">Takes only seconds!</span>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💾</div>
+                <h3>Scenario 2: Data Values Changed</h3>
+                <p><strong>What to refresh:</strong> Distinct Values only</p>
+                <ul>
+                    <li>Go to Settings → Embedding Management</li>
+                    <li>Uncheck all except: ☑️ Distinct Values</li>
+                    <li>Click "Refresh Selected Types"</li>
+                    <li>Re-samples column values without touching schema</li>
+                </ul>
+                <span class="badge badge-info">Smart refresh</span>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔗</div>
+                <h3>Scenario 3: New Foreign Keys</h3>
+                <p><strong>What to refresh:</strong> Relationships only</p>
+                <ul>
+                    <li>Check only: ☑️ Relationships (FKs)</li>
+                    <li>Click "Refresh Selected Types"</li>
+                    <li>Fast FK relationship re-embedding</li>
+                </ul>
+                <span class="badge badge-warning">Quick update</span>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔄</div>
+                <h3>Scenario 4: Major Changes</h3>
+                <p><strong>What to refresh:</strong> Everything</p>
+                <ul>
+                    <li>Click "Refresh Embeddings (Force Re-embed)" at top</li>
+                    <li>Or check all four boxes</li>
+                    <li>Complete schema re-learning</li>
+                </ul>
+                <span class="badge badge-warning">Full refresh</span>
+            </div>
+        </div>
+
+        <!-- Performance Tips -->
+        <div class="tips-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border-left-color: #00b894;">
+            <h3>⚡ Performance Tips</h3>
+            <ul>
+                <li><strong>First startup:</strong> Takes 30-60 seconds (creates embeddings)</li>
+                <li><strong>Subsequent startups:</strong> Takes 2-5 seconds (reuses embeddings)</li>
+                <li><strong>Selective refresh:</strong> Faster than full refresh</li>
+                <li><strong>Embeddings persist:</strong> No need to refresh unless schema changes</li>
+            </ul>
+        </div>
+
+        <!-- Tips & Tricks -->
+        <div class="section-header">
+            <h2>🎨 Tips & Tricks</h2>
+            <p>Get the most out of your experience</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🚀</div>
+                <h3>Quick Start</h3>
+                <p>Click the example questions in the Ask tab to get started quickly</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🧹</div>
+                <h3>Clear Chat</h3>
+                <p>Use the "Clear Chat" button to start fresh without losing your history</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h3>Copy Results</h3>
+                <p>Use the copy button on the chatbot to copy responses</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h3>Adjust Display</h3>
+                <p>Change text size and spacing density in Settings for better readability</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Explore First</h3>
+                <p>Browse the Schema Browser before asking complex questions</p>
+            </div>
+        </div>
+
+        <!-- Need Help -->
+        <div class="card" style="margin-top: 2.5rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center;">
+            <div class="card-icon" style="font-size: 2.5rem;">📞</div>
+            <h3 style="color: white !important; margin-bottom: 0.75rem;">Need Help?</h3>
+            <p style="color: white !important; margin-bottom: 0.75rem;">If you encounter issues:</p>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 0.4rem 0; color: white !important;">1. Try rephrasing your question more clearly</li>
+                <li style="padding: 0.4rem 0; color: white !important;">2. Check the Schema Browser to confirm table/column names</li>
+                <li style="padding: 0.4rem 0; color: white !important;">3. View the Agent Trace to understand processing</li>
+                <li style="padding: 0.4rem 0; color: white !important;">4. Contact your system administrator if problems persist</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 2px solid var(--border-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 0.75rem; font-size: 1.5rem;">Happy Querying! 🎉</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Intent-to-SQL Query Engine - Making database access simple for everyone</p>
+        </div>
+    </div>
+
+    <!-- JavaScript for FAQ Accordion -->
+    <script>
+        function initFAQ() {
+            const faqCards = document.querySelectorAll('.faq-card');
+            
+            if (faqCards.length === 0) {
+                return false;
+            }
+            
+            faqCards.forEach(function(card) {
+                card.style.cursor = 'pointer';
+                card.style.userSelect = 'none';
+                
+                // Remove any existing listeners by cloning
+                const newCard = card.cloneNode(true);
+                card.parentNode.replaceChild(newCard, card);
+            });
+            
+            // Re-query after cloning
+            const refreshedCards = document.querySelectorAll('.faq-card');
+            refreshedCards.forEach(function(card) {
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Close all other FAQs
+                    refreshedCards.forEach(function(otherCard) {
+                        if (otherCard !== card && otherCard.classList.contains('active')) {
+                            otherCard.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current FAQ
+                    card.classList.toggle('active');
+                });
+            });
+            
+            return true;
+        }
+
+        // Try multiple times with increasing delays (Gradio iframe compatibility)
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        function tryInitFAQ() {
+            attempts++;
+            
+            if (initFAQ()) {
+                return;
+            } else if (attempts < maxAttempts) {
+                setTimeout(tryInitFAQ, attempts * 200);
+            }
+        }
+
+        // Start initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', tryInitFAQ);
+        } else {
+            tryInitFAQ();
+        }
+
+        // Also try when window loads (backup)
+        window.addEventListener('load', function() {
+            setTimeout(tryInitFAQ, 500);
+        });
+    
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.card').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>

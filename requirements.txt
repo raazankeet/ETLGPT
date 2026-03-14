@@ -1,0 +1,10 @@
+python-dotenv
+pymysql>=1.1.0
+sentence-transformers
+chromadb
+scikit-learn
+langchain
+langchain-openai
+gradio>=4.28.0
+langgraph
+PyYAML

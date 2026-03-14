@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Technical Documentation - Intent-to-SQL Query Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --dark-bg: #0f172a;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-hover);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, #fdfeff 0%, #f8f9fd 100%);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .card h3 {
+            font-size: 1.15rem;
+            color: var(--dark-bg);
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+
+        .card p, .card ul {
+            color: var(--text-secondary);
+            line-height: 1.3;
+            font-size: 0.95rem;
+        }
+
+        .card ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .card ul li {
+            padding: 0.25rem 0;
+            padding-left: 1.3rem;
+            position: relative;
+            list-style: none !important;
+        }
+
+        .card ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin: 2.5rem 0 1.25rem;
+        }
+
+        .container > .section-header:first-child {
+            margin-top: 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.65rem;
+            color: var(--dark-bg);
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+
+        .section-header p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        /* Code blocks */
+        pre {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--dark-bg);
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Accordion Styles */
+        .accordion-card {
+            cursor: pointer !important;
+            background: linear-gradient(135deg, #fdfeff 0%, #f8f9fd 100%);
+            user-select: none;
+            margin-bottom: 0.35rem;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+        }
+
+        .accordion-card:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .accordion-card .accordion-header {
+            font-weight: 700;
+            color: var(--dark-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer !important;
+            font-size: 1.05rem;
+        }
+
+        .accordion-card .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            overflow: hidden;
+            transition: grid-template-rows 0.4s ease-out, padding-top 0.4s ease-out;
+            padding-top: 0;
+        }
+
+        .accordion-card .accordion-content > * {
+            min-height: 0;
+        }
+
+        .accordion-card.active .accordion-content {
+            grid-template-rows: 1fr;
+            padding-top: 1rem;
+            transition: grid-template-rows 0.4s ease-in, padding-top 0.4s ease-in;
+        }
+
+        .accordion-card .accordion-content {
+            color: var(--text-secondary);
+        }
+
+        .accordion-card .accordion-content ul {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            margin-top: 0.5rem;
+        }
+
+        .accordion-card .accordion-content ul li {
+            padding: 0.25rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            list-style: none !important;
+        }
+
+        .accordion-card .accordion-content ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .accordion-card .accordion-content p {
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .accordion-card .toggle {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+            font-weight: normal;
+            color: var(--primary-color);
+        }
+
+        .accordion-card.active .toggle {
+            transform: rotate(45deg);
+            color: var(--accent-color);
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.2rem;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .info-box h3 {
+            color: #1e40af;
+            margin-bottom: 0.6rem;
+            font-size: 1.05rem;
+        }
+
+        .info-box p, .info-box ul {
+            color: #1e3a8a;
+            font-size: 0.9rem;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .warning-box h3 {
+            color: #92400e;
+            margin-bottom: 0.6rem;
+            font-size: 1.05rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.25rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .section-header {
+                margin: 2rem 0 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Overview -->
+        <div class="section-header">
+            <h2>🛠️ Technical Documentation</h2>
+            <p>Production-ready natural language to SQL translation system</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 3rem;">
+            <p style="font-size: 1.05rem; line-height: 1.8;">
+                A production-ready chatbot that translates natural-language questions into T-SQL for Microsoft SQL Server. 
+                Uses ChromaDB for semantic search, LangGraph ReAct agents for intelligent query planning, and provides 
+                comprehensive safeguards for safe query execution.
+            </p>
+        </div>
+
+        <!-- System Architecture -->
+        <div class="section-header">
+            <h2>🏗️ System Architecture</h2>
+            <p>Core components and data flow</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">💾</div>
+                <h3>Core Components</h3>
+                <ul>
+                    <li><strong>Database:</strong> Microsoft SQL Server</li>
+                    <li><strong>Embedding Store:</strong> ChromaDB</li>
+                    <li><strong>Embedding Model:</strong> SentenceTransformers</li>
+                    <li><strong>Agent Framework:</strong> LangGraph ReAct</li>
+                    <li><strong>UI Framework:</strong> Gradio</li>
+                    <li><strong>LLM:</strong> OpenAI API</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔄</div>
+                <h3>Data Flow</h3>
+                <ul>
+                    <li>User submits natural language query</li>
+                    <li>ReAct agent analyzes and plans</li>
+                    <li>Consults semantic embeddings</li>
+                    <li>SQL generated with validation</li>
+                    <li>Query executes with safeguards</li>
+                    <li>Results formatted and returned</li>
+                    <li>Full trace logged with UUID</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Configuration Files -->
+        <div class="section-header">
+            <h2>⚙️ Configuration Files</h2>
+            <p>Essential configuration and setup</p>
+        </div>
+
+        <div class="card">
+            <h3>📄 .env (Required)</h3>
+            <p style="margin-bottom: 0.75rem;">Database connection parameters:</p>
+            <pre><code>MSSQL_SERVER=your-server
+MSSQL_DATABASE=your-database
+MSSQL_USER=your-username
+MSSQL_PASSWORD=your-password
+MSSQL_DRIVER=ODBC Driver 18 for SQL Server  # Optional
+MSSQL_PORT=1433  # Optional
+MSSQL_ENCRYPT=yes  # Optional
+OPENAI_API_KEY=your-openai-key</code></pre>
+        </div>
+
+        <div class="card" style="margin-top: 1rem;">
+            <h3>📄 config/embedding_config.yaml (Optional)</h3>
+            <p style="margin-bottom: 0.75rem;">Control semantic embeddings and schema:</p>
+            <pre><code>descriptions:
+  TableName: "Human-readable table description"
+  
+skip_tables:
+  - temp_table
+  - system_table
+  
+embed_values:
+  TableName:
+    - column1
+    - column2
+    
+skip_values:
+  - TableName.sensitive_column
+  
+safeguards:
+  default_row_limit: 10
+  query_timeout_seconds: 30</code></pre>
+        </div>
+
+        <div class="card" style="margin-top: 1rem;">
+            <h3>📄 config/prefs.json (Auto-generated)</h3>
+            <p style="margin-bottom: 0.75rem;">Runtime preferences managed via Settings tab:</p>
+            <ul>
+                <li><code>default_row_limit</code>: Default TOP N for queries</li>
+                <li><code>query_timeout_seconds</code>: Query execution timeout</li>
+                <li><code>chroma_only</code>: Skip live DB value lookups</li>
+                <li><code>stream_trace</code>: Enable live agent trace streaming</li>
+                <li><code>ui_density</code>: UI spacing/text size</li>
+                <li><code>generate_only</code>: Generate SQL without execution</li>
+            </ul>
+        </div>
+
+        <!-- Query Lifecycle -->
+        <div class="section-header">
+            <h2>🔄 Query Lifecycle</h2>
+            <p>How queries are processed from input to output</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">1️⃣</div>
+                <h3>Query Planning</h3>
+                <ul>
+                    <li>Agent receives natural language input</li>
+                    <li>Plans execution steps using tools</li>
+                    <li>Iteratively refines approach</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">2️⃣</div>
+                <h3>Schema Discovery</h3>
+                <ul>
+                    <li><code>search_tables</code>: Find relevant tables</li>
+                    <li><code>search_columns</code>: Match query intent</li>
+                    <li><code>search_relationships</code>: Discover FKs</li>
+                    <li><code>search_values</code>: Find example values</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">3️⃣</div>
+                <h3>Value Resolution</h3>
+                <ul>
+                    <li>Checks ChromaDB embeddings first</li>
+                    <li>Falls back to live DISTINCT queries</li>
+                    <li>Caches results for future queries</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">4️⃣</div>
+                <h3>SQL Generation</h3>
+                <ul>
+                    <li>Constructs T-SQL using context</li>
+                    <li>Validates syntax with SET PARSEONLY</li>
+                    <li>Retries on errors (up to 3 attempts)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">5️⃣</div>
+                <h3>Execution & Safeguards</h3>
+                <ul>
+                    <li>Injects TOP N if not specified</li>
+                    <li>Enforces query timeout</li>
+                    <li>Logs all attempts and final SQL</li>
+                    <li>Records metadata (time, duration, rows)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">6️⃣</div>
+                <h3>Result Formatting</h3>
+                <ul>
+                    <li>Returns natural language summary</li>
+                    <li>Provides structured table data</li>
+                    <li>Includes full audit trail</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Embedding Strategy -->
+        <div class="section-header">
+            <h2>📊 Embedding Strategy</h2>
+            <p>What gets embedded and how</p>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 1.5rem;">
+            <h3 style="color: white !important; margin-bottom: 0.75rem;">What Gets Embedded?</h3>
+            <div class="card-grid" style="gap: 0.75rem;">
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">Tables (always)</strong><br>
+                    Table names and descriptions from config
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">Columns (always)</strong><br>
+                    Column names, data types, Table.Column format
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">Relationships (always)</strong><br>
+                    Foreign key constraints
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 0.875rem; border-radius: 6px; font-size: 0.95rem; color: white;">
+                    <strong style="color: white;">Values (selective)</strong><br>
+                    Only columns listed in embed_values
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>⚡ Bootstrap Process</h3>
+            <p>Run on first launch or manually via Settings:</p>
+            <ul style="margin-top: 0.5rem; list-style: none; padding-left: 0;">
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">1.</span>
+                    Discovers all tables/columns via INFORMATION_SCHEMA
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">2.</span>
+                    Excludes tables in skip_tables
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">3.</span>
+                    Embeds table/column metadata
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">4.</span>
+                    Samples values from embed_values columns
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">5.</span>
+                    Stores embeddings in ChromaDB (./data/chroma_db/)
+                </li>
+            </ul>
+        </div>
+
+        <!-- Safeguards & Security -->
+        <div class="section-header">
+            <h2>🛡️ Safeguards & Security</h2>
+            <p>Built-in protections and security features</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🔒</div>
+                <h3>Query Safety</h3>
+                <ul>
+                    <li><strong>SELECT-only:</strong> Agent generates only SELECT</li>
+                    <li><strong>Row Limits:</strong> Automatic TOP N injection</li>
+                    <li><strong>Timeouts:</strong> Queries terminated after threshold</li>
+                    <li><strong>Syntax Validation:</strong> Pre-execution parsing</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔐</div>
+                <h3>Data Privacy</h3>
+                <ul>
+                    <li>Credentials stored locally in .env</li>
+                    <li>No external data transmission (except LLM)</li>
+                    <li>Embedding cache persists locally</li>
+                    <li>Query history bounded to 1000 entries</li>
+                    <li>Comprehensive logging with UTF-8</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⚙️</div>
+                <h3>Agent Configuration</h3>
+                <ul>
+                    <li><strong>Recursion Limit:</strong> Max reasoning steps (default: 25)</li>
+                    <li>Adjustable: 25, 50, 75, or 100 steps</li>
+                    <li>Higher values = more complex reasoning</li>
+                    <li>Stored in user preferences</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">👤</div>
+                <h3>Access Control</h3>
+                <ul>
+                    <li>Inherits SQL Server user permissions</li>
+                    <li>No privilege escalation</li>
+                    <li>Read-only operation mode</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="warning-box" style="margin-top: 1.5rem;">
+            <h3>🔑 API Key Protection</h3>
+            <ul style="margin-top: 0.5rem; list-style: none; padding-left: 0;">
+                <li style="padding: 0.25rem 0;">• Never commit .env file to version control</li>
+                <li style="padding: 0.25rem 0;">• Use .env.example as template</li>
+                <li style="padding: 0.25rem 0;">• Rotate keys if exposed</li>
+                <li style="padding: 0.25rem 0;">• .gitignore excludes .env by default</li>
+            </ul>
+        </div>
+
+        <!-- Maintenance Operations -->
+        <div class="section-header">
+            <h2>🔧 Maintenance Operations</h2>
+            <p>Managing embeddings and system health</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🔌</div>
+                <h3>Test Connection</h3>
+                <p>Validates database connectivity and ODBC driver configuration.</p>
+                <p style="margin-top: 0.5rem;"><strong>Location:</strong> Settings → Test Connection</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">👁️</div>
+                <h3>View Embeddings</h3>
+                <p>Displays counts for each embedding type and lists embedded tables/columns.</p>
+                <p style="margin-top: 0.5rem;"><strong>Location:</strong> Settings → Embedding Management → View Current Embeddings</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔄</div>
+                <h3>Full Refresh</h3>
+                <p>Rebuilds all embeddings from current database schema.</p>
+                <p style="margin-top: 0.5rem;"><strong>When to use:</strong> Major schema changes, first-time setup, troubleshooting</p>
+                <p style="margin-top: 0.25rem;"><strong>Location:</strong> Settings → Refresh Embeddings (Force Re-embed)</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <h3>Selective Refresh</h3>
+                <p>Granular control over which embedding types to refresh.</p>
+                <p style="margin-top: 0.5rem;"><strong>Options:</strong> Tables, Columns, Relationships, Distinct Values</p>
+                <p style="margin-top: 0.25rem;"><strong>Location:</strong> Settings → Embedding Management → Refresh Selected Types</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 1rem;">
+            <h3>⚡ Performance Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Refresh Type</th>
+                        <th>Typical Time</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Full Refresh</strong></td>
+                        <td>30-60s</td>
+                        <td>Major changes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tables + Columns</strong></td>
+                        <td>5-10s</td>
+                        <td>New tables</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Values Only</strong></td>
+                        <td>15-30s</td>
+                        <td>Data changes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Relationships Only</strong></td>
+                        <td>1-2s</td>
+                        <td>FK changes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info-box" style="margin-top: 1.5rem;">
+            <h3>🚀 Startup Behavior</h3>
+            <ul style="margin-top: 0.5rem; list-style: none; padding-left: 0;">
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">•</span>
+                    <strong>First Run:</strong> Creates embeddings (30-60 seconds one-time cost)
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">•</span>
+                    <strong>Subsequent Runs:</strong> Reuses existing embeddings (2-5 seconds startup)
+                </li>
+                <li style="padding: 0.25rem 0; padding-left: 1.5rem; position: relative;">
+                    <span style="position: absolute; left: 0; color: #1e40af; font-weight: bold;">•</span>
+                    <strong>Smart Detection:</strong> Automatically checks if embeddings exist
+                </li>
+            </ul>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section-header">
+            <h2>🔍 Troubleshooting</h2>
+            <p>Common issues and solutions</p>
+        </div>
+
+        <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Slow Startup Every Time</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> Application takes 30-60 seconds to start every time</p>
+                        <p style="margin-top: 0.5rem;"><strong>Cause:</strong> Embeddings are being re-created on each startup</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Check if data/chroma_db/ directory exists and has data</li>
+                            <li>Verify ChromaDB collections are accessible</li>
+                            <li>Check logs for "Using existing embeddings" vs "Embeddings created"</li>
+                            <li>Try deleting chroma_db/ and letting it rebuild once</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>System Can't Find Tables/Columns</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> Agent says "table not found" or generates incorrect SQL</p>
+                        <p style="margin-top: 0.5rem;"><strong>Cause:</strong> Embeddings may be stale or missing</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Go to Settings → Embedding Management</li>
+                            <li>Click "View Current Embeddings" to verify tables</li>
+                            <li>Use "Refresh Embeddings (Force Re-embed)"</li>
+                            <li>Check config for skip_tables entries</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Wrong Column Values in Queries</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> Agent uses incorrect values in WHERE clauses</p>
+                        <p style="margin-top: 0.5rem;"><strong>Cause:</strong> Distinct value embeddings are outdated</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Go to Settings → Embedding Management → Selective Refresh</li>
+                            <li>Check only "Distinct Values"</li>
+                            <li>Click "Refresh Selected Types"</li>
+                            <li>Verify correct columns in embed_values in config</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Agent Stopped Due to Iteration Limit</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> Error message or incomplete answers</p>
+                        <p style="margin-top: 0.5rem;"><strong>Cause:</strong> Complex question requires more reasoning steps</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Increase recursion limit: Settings → Agent Recursion Limit</li>
+                            <li>Use 50 for complex multi-table queries</li>
+                            <li>Use 75 for very complex analytical questions</li>
+                            <li>Use 100 for extremely difficult questions</li>
+                            <li>Simplify question into smaller queries</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Can't Connect to SQL Server</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> "ODBC connection failed" error</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Verify .env file has correct credentials</li>
+                            <li>Test network connectivity to SQL Server</li>
+                            <li>Check firewall rules (port 1433)</li>
+                            <li>Verify ODBC driver is installed</li>
+                            <li>Try adding ,1433 port explicitly to server name</li>
+                            <li>Test with Settings → Test Connection</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-card" onclick="this.classList.toggle('active'); document.querySelectorAll('.accordion-card').forEach(function(c){if(c!==this && c.classList.contains('active'))c.classList.remove('active');}.bind(this));">
+                <div class="accordion-header">
+                    <span>Queries Taking Too Long</span>
+                    <span class="toggle">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div>
+                        <p><strong>Symptoms:</strong> Timeout errors or slow responses</p>
+                        <p style="margin-top: 0.5rem;"><strong>Solutions:</strong></p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Increase timeout: Settings → Query Timeout</li>
+                            <li>Check if query has proper indexes</li>
+                            <li>Review generated SQL in Inspect tab</li>
+                            <li>Consider adding TOP N to limit results</li>
+                            <li>Enable "Chroma-only mode" to skip live lookups</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Configuration -->
+        <div class="section-header">
+            <h2>⚙️ Advanced Configuration</h2>
+            <p>Fine-tune system behavior</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">📐</div>
+                <h3>UI Density</h3>
+                <p>Adjust text size and spacing for different displays:</p>
+                <ul style="margin-top: 0.5rem;">
+                    <li><strong>XS:</strong> Minimal spacing, compact</li>
+                    <li><strong>S:</strong> Small (default)</li>
+                    <li><strong>M:</strong> Medium</li>
+                    <li><strong>L:</strong> Large, comfortable</li>
+                    <li><strong>XL:</strong> Extra large, accessibility</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <h3>Chroma-Only Mode</h3>
+                <p>Skips live database value lookups, uses only cached embeddings.</p>
+                <p style="margin-top: 0.5rem;"><span class="badge badge-success">Benefits:</span> Faster, reduced DB load</p>
+                <p style="margin-top: 0.25rem;"><span class="badge badge-warning">Drawbacks:</span> May miss recent values</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Generate-Only Mode</h3>
+                <p>Creates SQL without executing it.</p>
+                <p style="margin-top: 0.5rem;"><strong>Use case:</strong> Review SQL before running, testing, development</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h3>Stream Trace</h3>
+                <p>Live-streams agent reasoning steps during query execution.</p>
+                <p style="margin-top: 0.5rem;"><span class="badge badge-info">Benefits:</span> Real-time debugging, transparency</p>
+                <p style="margin-top: 0.25rem;"><span class="badge badge-success">Performance:</span> Minimal overhead</p>
+            </div>
+        </div>
+
+        <!-- API Surface -->
+        <div class="section-header">
+            <h2>🔌 API Surface</h2>
+            <p>Tools available to the agent</p>
+        </div>
+
+        <div class="card">
+            <h3>Available Tools</h3>
+            <ul style="margin-top: 0.75rem;">
+                <li><code>search_tables(query, top_k)</code> - Semantic table search</li>
+                <li><code>search_columns(query, top_k)</code> - Semantic column search</li>
+                <li><code>search_relationships(query, top_k)</code> - Find FK relationships</li>
+                <li><code>search_values(query, top_k)</code> - Find example values</li>
+                <li><code>fetch_distinct_values(table, column, limit)</code> - Live value lookup</li>
+                <li><code>validate_sql(sql)</code> - Syntax check via SET PARSEONLY</li>
+                <li><code>execute_sql(sql)</code> - Run SELECT query with safeguards</li>
+            </ul>
+        </div>
+
+        <!-- Logging & Audit -->
+        <div class="section-header">
+            <h2>📝 Logging & Audit Trail</h2>
+            <p>Comprehensive query tracking</p>
+        </div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h3>Query History</h3>
+                <p>Each entry includes:</p>
+                <ul style="margin-top: 0.5rem;">
+                    <li>Unique UUID</li>
+                    <li>Timestamp (UTC)</li>
+                    <li>Original question</li>
+                    <li>Duration in seconds</li>
+                    <li>SQL generation attempts</li>
+                    <li>Final SQL executed</li>
+                    <li>Row count</li>
+                    <li>Status (OK or ERROR)</li>
+                    <li>Full agent trace</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Trace Events</h3>
+                <p>Captures all agent actions:</p>
+                <ul style="margin-top: 0.5rem;">
+                    <li>Tool calls and responses</li>
+                    <li>Agent thoughts/planning steps</li>
+                    <li>Errors and retries</li>
+                </ul>
+                <p style="margin-top: 0.75rem;"><strong>Access:</strong> Inspect → Agent Trace</p>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📄</div>
+                <h3>Log Files</h3>
+                <p><strong>Path:</strong> <code>logs/app.log</code></p>
+                <p style="margin-top: 0.5rem;"><strong>Encoding:</strong> UTF-8</p>
+                <p style="margin-top: 0.25rem;"><strong>Key Messages:</strong></p>
+                <ul style="margin-top: 0.5rem;">
+                    <li>"Application starting..."</li>
+                    <li>"[OK] Using existing embeddings"</li>
+                    <li>"Database connection successful"</li>
+                    <li>"Query executed successfully"</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 2px solid var(--border-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 0.75rem; font-size: 1.5rem;">Technical Documentation Complete 🎉</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Intent-to-SQL Query Engine - Robust, secure, and production-ready</p>
+        </div>
+    </div>
+
+    <!-- JavaScript for Accordion (Inline for Gradio compatibility) -->
+    <script>
+        (function() {
+            function toggleAccordion(el) {
+                var card = el.closest('.accordion-card');
+                if (!card) return;
+                
+                // Close all other accordions
+                var allCards = document.querySelectorAll('.accordion-card');
+                allCards.forEach(function(c) {
+                    if (c !== card && c.classList.contains('active')) {
+                        c.classList.remove('active');
+                    }
+                });
+                
+                // Toggle current
+                card.classList.toggle('active');
+            }
+            
+            // Attach event to all accordion cards
+            setTimeout(function() {
+                var cards = document.querySelectorAll('.accordion-card');
+                cards.forEach(function(card) {
+                    card.onclick = function(e) {
+                        toggleAccordion(e.target);
+                    };
+                    card.style.cursor = 'pointer';
+                });
+            }, 100);
+        })();
+    </script>
+</body>
+</html>

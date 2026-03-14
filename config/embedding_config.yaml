@@ -1,0 +1,121 @@
+descriptions:
+  iics_activity_logs: Execution-level activity logs for IICS jobs and runtime sessions.
+  iics_cdi_metering_audit_data: CDI metering and audit facts including task-level usage and billing metrics.
+  iics_ipu_meter_usage: IPU usage and billing period metrics by meter and organization.
+  zerotouch_virtual_machines: Master list of virtual machines and VM-level attributes.
+  zerotouch_cpu_usage: Time-series CPU usage snapshots by virtual machines.
+  zerotouch_disk_usage: Time-series disk usage snapshots by virtual machines.
+  zerotouch_memory_usage: Time-series memory usage snapshots by virtual machines.
+  zerotouch_network_usage: Time-series network traffic snapshots by virtual machines.
+
+  column_descriptions:
+  iics_activity_logs.database_id: Primary key for the activity log record.
+  iics_activity_logs.actual_execution_time: Elapsed execution duration reported for the run.
+  iics_activity_logs.agent_id: Identifier of the Secure Agent used for execution.
+  iics_activity_logs.consumed_compute_units: Compute units consumed by the run.
+  iics_activity_logs.detailed_session_log: Reference or path to the detailed session log.
+  iics_activity_logs.end_time: Job end timestamp in local/system timezone.
+  iics_activity_logs.end_time_utc: Job end timestamp in UTC.
+  iics_activity_logs.error_code: Error code returned when execution fails.
+  iics_activity_logs.error_msg: Detailed error message for failed runs.
+  iics_activity_logs.failed_source_rows: Number of source rows that failed processing.
+  iics_activity_logs.failed_target_rows: Number of target rows that failed processing.
+  iics_activity_logs.id: Business/log identifier associated with the run event.
+  iics_activity_logs.is_server_less: Flag indicating whether execution was serverless.
+  iics_activity_logs.log_file_name: Name of the generated run/session log file.
+  iics_activity_logs.object_id: Identifier of the executed object (task/mapping/job).
+  iics_activity_logs.object_name: Name of the executed ETL job (task/mapping/job).
+  iics_activity_logs.requested_compute_units: Requested compute units for the run.
+  iics_activity_logs.run_id: Execution run id assigned by the platform.
+  iics_activity_logs.runtime_environment_id: Identifier of the runtime environment used.
+  iics_activity_logs.service_type: Service category for the execution event.
+  iics_activity_logs.start_time: Job start timestamp in local/system timezone.
+  iics_activity_logs.start_time_utc: Job start timestamp in UTC.
+  iics_activity_logs.started_by: User or principal that triggered execution.
+  iics_activity_logs.state: Execution state; 1=completed successfully, 2=completed with errors, 3=failed to complete.
+  iics_activity_logs.success_source_rows: Number of source rows successfully processed.
+  iics_activity_logs.success_target_rows: Number of target rows successfully loaded.
+  iics_activity_logs.type: ETL job type, could be DMASK(Data Masking job), DRS, DSS(Data Syncronization), MTT(Mapping Tasks), PCS, WORKFLOW.
+  iics_cdi_metering_audit_data.id: Primary key for metering audit record.
+  iics_cdi_metering_audit_data.audit_time: Timestamp when audit record was captured.
+  iics_cdi_metering_audit_data.cores_used: Compute cores consumed during task run.
+  iics_cdi_metering_audit_data.end_time: ETL job end time.
+  iics_cdi_metering_audit_data.environment: Runtime environment name.
+  iics_cdi_metering_audit_data.environment_id: Runtime environment identifier.
+  iics_cdi_metering_audit_data.folder_name: IICS folder containing the task.
+  iics_cdi_metering_audit_data.metered_value: Metered usage value for billing.
+  iics_cdi_metering_audit_data.obm_task_time_seconds: ETL job runtime in seconds.
+  iics_cdi_metering_audit_data.org_id: Organization id associated with usage.
+  iics_cdi_metering_audit_data.project_name: Project name linked to task execution.
+  iics_cdi_metering_audit_data.start_time: Task start time.
+  iics_cdi_metering_audit_data.status: Task execution status.
+  iics_cdi_metering_audit_data.task_id: Task identifier.
+  iics_cdi_metering_audit_data.task_name: Task display name.
+  iics_cdi_metering_audit_data.task_object_name: Object name tied to the task.
+  iics_cdi_metering_audit_data.task_run_id: Task run id for execution instance.
+  iics_cdi_metering_audit_data.task_type: Type of CDI task executed.
+  iics_ipu_meter_usage.id: Primary key for IPU usage record.
+  iics_ipu_meter_usage.ipu: IPU amount used for the record.
+  iics_ipu_meter_usage.ipurate: Rate used for IPU calculation.
+  iics_ipu_meter_usage.billing_period_end_date: End date of billing period.
+  iics_ipu_meter_usage.billing_period_start_date: Start date of billing period.
+  iics_ipu_meter_usage.date: Observation or usage date.
+  iics_ipu_meter_usage.meter_id: Unique meter identifier.
+  iics_ipu_meter_usage.meter_name: Human-readable meter name.
+  iics_ipu_meter_usage.meter_usage: Meter usage value.
+  iics_ipu_meter_usage.metric_category: Category for the metric/meter.
+  iics_ipu_meter_usage.org_id: Organization id associated with usage.
+  iics_ipu_meter_usage.org_name: Organization name.
+  iics_ipu_meter_usage.org_type: Organization type or classification.
+  iics_ipu_meter_usage.scalar: Scalar/unit context for usage interpretation.
+  zerotouch_virtual_machines.vmid: Primary key for virtual machine.
+  zerotouch_virtual_machines.os: Operating system running on VM.
+  zerotouch_virtual_machines.vmname: Virtual machine name.
+  zerotouch_virtual_machines.cloud_provider: Cloud provider hosting the VM.
+  zerotouch_virtual_machines.last_update: Last metadata update timestamp.
+  zerotouch_virtual_machines.provisioning_date: VM provisioning timestamp.
+  zerotouch_virtual_machines.region: Cloud/provider region of VM deployment.
+  zerotouch_cpu_usage.cpuusageid: Primary key for CPU usage row.
+  zerotouch_cpu_usage.entry_date: Timestamp of CPU usage measurement.
+  zerotouch_cpu_usage.usage_percentage: CPU utilization percentage at measurement time.
+  zerotouch_cpu_usage.vmid: Foreign key to virtual machine (zerotouch_virtual_machines.vmid).
+  zerotouch_disk_usage.disk_usageid: Primary key for disk usage row.
+  zerotouch_disk_usage.entry_date: Timestamp of disk usage measurement.
+  zerotouch_disk_usage.free_space: Available disk space at measurement time.
+  zerotouch_disk_usage.total_space: Total disk capacity at measurement time.
+  zerotouch_disk_usage.used_diskpct: Disk usage percentage at measurement time.
+  zerotouch_disk_usage.vmid: Foreign key to virtual machine (zerotouch_virtual_machines.vmid).
+  zerotouch_memory_usage.memory_usageid: Primary key for memory usage row.
+  zerotouch_memory_usage.available_memory: Available memory at measurement time.
+  zerotouch_memory_usage.entry_date: Timestamp of memory usage measurement.
+  zerotouch_memory_usage.total_memory: Total memory capacity at measurement time.
+  zerotouch_memory_usage.used_memorypct: Memory utilization percentage at measurement time.
+  zerotouch_memory_usage.vmid: Foreign key to virtual machine (zerotouch_virtual_machines.vmid).
+  zerotouch_network_usage.network_usageid: Primary key for network usage row.
+  zerotouch_network_usage.entry_date: Timestamp of network usage measurement.
+  zerotouch_network_usage.incoming_traffic: Inbound network traffic at measurement time.
+  zerotouch_network_usage.outgoing_traffic: Outbound network traffic at measurement time.
+  zerotouch_network_usage.vmid: Foreign key to virtual machine (zerotouch_virtual_machines.vmid).
+
+embed_values:
+  iics_activity_logs:
+  - agent_id
+  - service_type
+  - started_by
+  - state
+  - object_name
+  - runtime_environment_id
+  - type
+  zerotouch_cpu_usage:
+  - cpuusageid
+  - entry_date
+  - usage_percentage
+  zerotouch_disk_usage:
+  - disk_usageid
+  - used_diskpct
+
+skip_values:
+- iics_activity_logs.end_time_utc
+- new_table3.DateOfBirth
+- iics_cdi_metering_audit_data.obm_task_time_seconds
+

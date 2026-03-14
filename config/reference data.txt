@@ -1,0 +1,184 @@
+{
+  "tables": [
+    {
+      "name": "iics_activity_logs",
+      "description": "Execution-level activity logs for IICS jobs and runtime sessions.",
+      "embed": true,
+      "columns": [
+        {"name": "database_id", "type": "bigint(20)", "description": "Primary key for the activity log record."},
+        {"name": "actual_execution_time", "type": "varchar(255)", "description": "Elapsed execution duration reported for the run."},
+        {"name": "agent_id", "type": "varchar(255)", "description": "Identifier of the Secure Agent used for execution."},
+        {"name": "consumed_compute_units", "type": "varchar(255)", "description": "Compute units consumed by the run."},
+        {"name": "detailed_session_log", "type": "varchar(255)", "description": "Reference or path to the detailed session log."},
+        {"name": "end_time", "type": "datetime", "description": "Job end timestamp in local/system timezone."},
+        {"name": "end_time_utc", "type": "datetime", "description": "Job end timestamp in UTC."},
+        {"name": "error_code", "type": "varchar(255)", "description": "Error code returned when execution fails."},
+        {"name": "error_msg", "type": "text", "description": "Detailed error message for failed runs."},
+        {"name": "failed_source_rows", "type": "int(11)", "description": "Number of source rows that failed processing."},
+        {"name": "failed_target_rows", "type": "int(11)", "description": "Number of target rows that failed processing."},
+        {"name": "id", "type": "varchar(255)", "description": "Business/log identifier associated with the run event."},
+        {"name": "is_server_less", "type": "varchar(255)", "description": "Flag indicating whether execution was serverless."},
+        {"name": "log_file_name", "type": "varchar(255)", "description": "Name of the generated run/session log file."},
+        {"name": "object_id", "type": "varchar(255)", "description": "Identifier of the executed object (task/mapping/job)."},
+        {"name": "object_name", "type": "varchar(255)", "description": "Name of the executed object (task/mapping/job)."},
+        {"name": "requested_compute_units", "type": "varchar(255)", "description": "Requested compute units for the run."},
+        {"name": "run_id", "type": "int(11)", "description": "Execution run id assigned by the platform."},
+        {"name": "runtime_environment_id", "type": "varchar(255)", "description": "Identifier of the runtime environment used."},
+        {"name": "service_type", "type": "varchar(255)", "description": "Service category for the execution event."},
+        {"name": "start_time", "type": "datetime", "description": "Job start timestamp in local/system timezone."},
+        {"name": "start_time_utc", "type": "datetime", "description": "Job start timestamp in UTC."},
+        {"name": "started_by", "type": "varchar(255)", "description": "User or principal that triggered execution."},
+        {"name": "state", "type": "varchar(255)", "description": "Execution state such as success, failed, failed to execute. 1 denotes The task completed successfully. 2 The task completed with errors. 3 denotes The task failed to complete."},
+        {"name": "success_source_rows", "type": "int(11)", "description": "Number of source rows successfully processed."},
+        {"name": "success_target_rows", "type": "int(11)", "description": "Number of target rows successfully loaded."},
+        {"name": "type", "type": "varchar(255)", "description": "The type of ETL job, can have one of the following codes: DMASK (Masking task), DRS (Replication task), DSS (Synchronization task), MTT (Mapping task), PCS (PowerCenter task), or WORKFLOW (Linear taskflow).  "}
+      ]
+    },
+    {
+      "name": "iics_cdi_metering_audit_data",
+      "description": "CDI metering and audit facts including task-level usage and billing metrics.",
+      "embed": true,
+      "columns": [
+        {"name": "id", "type": "bigint(20)", "description": "Primary key for metering audit record."},
+        {"name": "audit_time", "type": "datetime", "description": "Timestamp when audit record was captured."},
+        {"name": "cores_used", "type": "double", "description": "Compute cores consumed during task run."},
+        {"name": "end_time", "type": "datetime", "description": "Task end time."},
+        {"name": "environment", "type": "varchar(255)", "description": "Runtime environment name."},
+        {"name": "environment_id", "type": "varchar(255)", "description": "Runtime environment identifier."},
+        {"name": "folder_name", "type": "varchar(255)", "description": "IICS folder containing the task."},
+        {"name": "metered_value", "type": "double", "description": "Metered usage value for billing."},
+        {"name": "obm_task_time_seconds", "type": "int(11)", "description": "Task runtime in seconds."},
+        {"name": "org_id", "type": "varchar(255)", "description": "Organization id associated with usage."},
+        {"name": "project_name", "type": "varchar(255)", "description": "Project name linked to task execution."},
+        {"name": "start_time", "type": "datetime", "description": "Task start time."},
+        {"name": "status", "type": "varchar(255)", "description": "Task execution status."},
+        {"name": "task_id", "type": "varchar(255)", "description": "Task identifier."},
+        {"name": "task_name", "type": "varchar(255)", "description": "Task display name."},
+        {"name": "task_object_name", "type": "varchar(255)", "description": "Object name tied to the task."},
+        {"name": "task_run_id", "type": "int(11)", "description": "Task run id for execution instance."},
+        {"name": "task_type", "type": "varchar(255)", "description": "Type of CDI task executed."}
+      ]
+    },
+    {
+      "name": "iics_ipu_meter_usage",
+      "description": "IPU usage and billing period metrics by meter and organization.",
+      "embed": true,
+      "columns": [
+        {"name": "id", "type": "bigint(20)", "description": "Primary key for IPU usage record."},
+        {"name": "ipu", "type": "decimal(19,2)", "description": "IPU amount used for the record."},
+        {"name": "ipurate", "type": "decimal(19,2)", "description": "Rate used for IPU calculation."},
+        {"name": "billing_period_end_date", "type": "datetime", "description": "End date of billing period."},
+        {"name": "billing_period_start_date", "type": "datetime", "description": "Start date of billing period."},
+        {"name": "date", "type": "datetime", "description": "Observation or usage date."},
+        {"name": "meter_id", "type": "varchar(255)", "description": "Unique meter identifier."},
+        {"name": "meter_name", "type": "varchar(255)", "description": "Human-readable meter name."},
+        {"name": "meter_usage", "type": "decimal(19,2)", "description": "Meter usage value."},
+        {"name": "metric_category", "type": "varchar(255)", "description": "Category for the metric/meter."},
+        {"name": "org_id", "type": "varchar(255)", "description": "Organization id associated with usage."},
+        {"name": "org_name", "type": "varchar(255)", "description": "Organization name."},
+        {"name": "org_type", "type": "varchar(255)", "description": "Organization type or classification."},
+        {"name": "scalar", "type": "varchar(255)", "description": "Scalar/unit context for usage interpretation."}
+      ]
+    },
+    {
+      "name": "zerotouch_virtual_machines",
+      "description": "Master list of virtual machines and VM-level attributes.",
+      "embed": true,
+      "columns": [
+        {"name": "vmid", "type": "int(11)", "description": "Primary key for virtual machine."},
+        {"name": "os", "type": "varchar(255)", "description": "Operating system running on VM."},
+        {"name": "vmname", "type": "varchar(255)", "description": "Virtual machine name."},
+        {"name": "cloud_provider", "type": "varchar(255)", "description": "Cloud provider hosting the VM."},
+        {"name": "last_update", "type": "datetime", "description": "Last metadata update timestamp."},
+        {"name": "provisioning_date", "type": "datetime", "description": "VM provisioning timestamp."},
+        {"name": "region", "type": "varchar(255)", "description": "Cloud/provider region of VM deployment."}
+      ]
+    },
+    {
+      "name": "zerotouch_cpu_usage",
+      "description": "Time-series CPU usage snapshots by VM.",
+      "embed": true,
+      "columns": [
+        {"name": "cpuusageid", "type": "int(11)", "description": "Primary key for CPU usage row."},
+        {"name": "entry_date", "type": "datetime", "description": "Timestamp of CPU usage measurement."},
+        {"name": "usage_percentage", "type": "decimal(19,2)", "description": "CPU utilization percentage at measurement time."},
+        {"name": "vmid", "type": "int(11)", "description": "Foreign key to virtual machine (zerotouch_virtual_machines.vmid)."}
+      ]
+    },
+    {
+      "name": "zerotouch_disk_usage",
+      "description": "Time-series disk usage snapshots by VM.",
+      "embed": true,
+      "columns": [
+        {"name": "disk_usageid", "type": "int(11)", "description": "Primary key for disk usage row."},
+        {"name": "entry_date", "type": "datetime", "description": "Timestamp of disk usage measurement."},
+        {"name": "free_space", "type": "decimal(19,2)", "description": "Available disk space at measurement time."},
+        {"name": "total_space", "type": "decimal(19,2)", "description": "Total disk capacity at measurement time."},
+        {"name": "used_diskpct", "type": "decimal(19,2)", "description": "Disk usage percentage at measurement time."},
+        {"name": "vmid", "type": "int(11)", "description": "Foreign key to virtual machine (zerotouch_virtual_machines.vmid)."}
+      ]
+    },
+    {
+      "name": "zerotouch_memory_usage",
+      "description": "Time-series memory usage snapshots by VM.",
+      "embed": true,
+      "columns": [
+        {"name": "memory_usageid", "type": "int(11)", "description": "Primary key for memory usage row."},
+        {"name": "available_memory", "type": "decimal(19,2)", "description": "Available memory at measurement time."},
+        {"name": "entry_date", "type": "datetime", "description": "Timestamp of memory usage measurement."},
+        {"name": "total_memory", "type": "decimal(19,2)", "description": "Total memory capacity at measurement time."},
+        {"name": "used_memorypct", "type": "decimal(19,2)", "description": "Memory utilization percentage at measurement time."},
+        {"name": "vmid", "type": "int(11)", "description": "Foreign key to virtual machine (zerotouch_virtual_machines.vmid)."}
+      ]
+    },
+    {
+      "name": "zerotouch_network_usage",
+      "description": "Time-series network traffic snapshots by VM.",
+      "embed": true,
+      "columns": [
+        {"name": "network_usageid", "type": "int(11)", "description": "Primary key for network usage row."},
+        {"name": "entry_date", "type": "datetime", "description": "Timestamp of network usage measurement."},
+        {"name": "incoming_traffic", "type": "decimal(19,2)", "description": "Inbound network traffic at measurement time."},
+        {"name": "outgoing_traffic", "type": "decimal(19,2)", "description": "Outbound network traffic at measurement time."},
+        {"name": "vmid", "type": "int(11)", "description": "Foreign key to virtual machine (zerotouch_virtual_machines.vmid)."}
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "zerotouch_cpu_usage",
+      "from_column": "vmid",
+      "to_table": "zerotouch_virtual_machines",
+      "to_column": "vmid",
+      "type": "many-to-one"
+    },
+    {
+      "from_table": "zerotouch_disk_usage",
+      "from_column": "vmid",
+      "to_table": "zerotouch_virtual_machines",
+      "to_column": "vmid",
+      "type": "many-to-one"
+    },
+    {
+      "from_table": "zerotouch_memory_usage",
+      "from_column": "vmid",
+      "to_table": "zerotouch_virtual_machines",
+      "to_column": "vmid",
+      "type": "many-to-one"
+    },
+    {
+      "from_table": "zerotouch_network_usage",
+      "from_column": "vmid",
+      "to_table": "zerotouch_virtual_machines",
+      "to_column": "vmid",
+      "type": "many-to-one"
+    },
+    {
+      "from_table": "iics_cdi_metering_audit_data",
+      "from_column": "org_id",
+      "to_table": "iics_ipu_meter_usage",
+      "to_column": "org_id",
+      "type": "many-to-many-logical"
+    }
+  ]
+}
